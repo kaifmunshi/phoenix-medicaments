@@ -1,3 +1,4 @@
+import dns from "node:dns";
 import express from "express";
 import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
@@ -15,6 +16,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function lookupIpv4(hostname, options, callback) {
+  return dns.lookup(hostname, { ...options, family: 4 }, callback);
 }
 
 function withTimeout(promise, timeoutMs, message) {
@@ -48,7 +53,9 @@ router.post("/", async (req, res, next) => {
       port: env.smtp.port,
       secure: env.smtp.secure,
       family: 4,
+      lookup: lookupIpv4,
       requireTLS: env.smtp.port === 587,
+      tls: { servername: env.smtp.host },
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 15000,
@@ -94,4 +101,5 @@ router.post("/", async (req, res, next) => {
 });
 
 export default router;
+
 
