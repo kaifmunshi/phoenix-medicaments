@@ -192,6 +192,7 @@ function navigateTo(event, href) {
 
 function Header({ activeRoute }) {
   const [isAmazonOpen, setIsAmazonOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = [
     ["home", "Home", routes.home],
     ["categories", "Product Categories", routes.categories],
@@ -201,27 +202,27 @@ function Header({ activeRoute }) {
   ];
 
   return (
-    <header className="site-header">
-      <a className="brand" href={routes.home} onClick={(event) => navigateTo(event, routes.home)}>
+    <header className={`site-header ${isMenuOpen ? "is-menu-open" : ""}`}>
+      <a className="brand" href={routes.home} onClick={(event) => { setIsMenuOpen(false); setIsAmazonOpen(false); navigateTo(event, routes.home); }}>
         <img className="brand-logo" src={mbHerbalsLogo} alt="MB Herbals" />
         <span className="brand-name">Phoenix Medicaments Pvt Ltd</span>
       </a>
-      <nav aria-label="Primary navigation">
+      <nav aria-label="Primary navigation" id="primary-navigation">
         {navItems.map(([key, label, href]) => (
-          <a className={activeRoute === key ? "active" : ""} href={href} key={key} onClick={(event) => { setIsAmazonOpen(false); navigateTo(event, href); }}>{label}</a>
+          <a className={activeRoute === key ? "active" : ""} href={href} key={key} onClick={(event) => { setIsAmazonOpen(false); setIsMenuOpen(false); navigateTo(event, href); }}>{label}</a>
         ))}
         <div className={`nav-dropdown ${isAmazonOpen ? "is-open" : ""}`}> 
           <button type="button" aria-haspopup="true" aria-expanded={isAmazonOpen} onClick={() => setIsAmazonOpen((open) => !open)}>Buy on Amazon</button>
           <div className="nav-dropdown-menu" aria-label="Amazon country links">
             {amazonCountryLinks.map(([country, href]) => (
-              <a href={href} key={country} target="_blank" rel="noreferrer" onClick={() => setIsAmazonOpen(false)}>{country}</a>
+              <a href={href} key={country} target="_blank" rel="noreferrer" onClick={() => { setIsAmazonOpen(false); setIsMenuOpen(false); }}>{country}</a>
             ))}
           </div>
         </div>
       </nav>
       <div className="header-actions" aria-label="Quick actions">
         <a href={routes.contact} aria-label="Contact Phoenix Medicaments" onClick={(event) => navigateTo(event, routes.contact)}><UserRound size={18} /></a>
-        <button type="button" className="menu-button" aria-label="Navigation"><Menu size={19} /></button>
+        <button type="button" className="menu-button" aria-label="Navigation" aria-controls="primary-navigation" aria-expanded={isMenuOpen} onClick={() => { setIsMenuOpen((open) => !open); setIsAmazonOpen(false); }}><Menu size={19} /></button>
       </div>
     </header>
   );
@@ -381,6 +382,8 @@ function CategoriesPage() {
   const [productPage, setProductPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState({});
+  const [catalogueTotal, setCatalogueTotal] = useState(0);
+  const [isLoadingCatalogueTotal, setIsLoadingCatalogueTotal] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
   const [productError, setProductError] = useState("");
@@ -389,8 +392,28 @@ function CategoriesPage() {
   const shouldScrollToProductsRef = useRef(false);
   const currentGroup = productGroups[selectedGroup];
   const pageSize = 12;
-  const totalProducts = Object.values(categoryCounts).reduce((sum, count) => sum + Number(count || 0), 0);
+  const totalProducts = catalogueTotal || Object.values(categoryCounts).reduce((sum, count) => sum + Number(count || 0), 0);
 
+
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoadingCatalogueTotal(true);
+
+    fetchProducts({ page: 1, limit: 1 })
+      .then((data) => {
+        if (isCurrent) setCatalogueTotal(Number(data.total || 0));
+      })
+      .catch(() => {
+        if (isCurrent) setCatalogueTotal(0);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoadingCatalogueTotal(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
   function selectCategory(value) {
     shouldScrollToProductsRef.current = true;
     setSelectedGroup(value);
@@ -494,7 +517,7 @@ function CategoriesPage() {
         </div>
         <aside className="category-total-card" aria-label="Total products in catalogue">
           <span>Catalogue total</span>
-          <strong>{isLoadingProducts && totalProducts === 0 ? "..." : totalProducts}</strong>
+          <strong>{(isLoadingCatalogueTotal || (isLoadingProducts && totalProducts === 0)) ? "..." : totalProducts}</strong>
           <small>products across all categories</small>
         </aside>
       </div>

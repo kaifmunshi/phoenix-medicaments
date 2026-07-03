@@ -12,7 +12,28 @@ import contactRoutes from "./routes/contact.routes.js";
 const app = express();
 
 app.use(helmet());
-const allowedOrigins = [env.clientUrl, env.adminUrl].filter(Boolean);
+function expandAllowedOrigins(urls) {
+  const origins = new Set(urls.filter(Boolean));
+
+  urls.filter(Boolean).forEach((url) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname.startsWith("www.")) {
+        parsed.hostname = parsed.hostname.slice(4);
+        origins.add(parsed.origin);
+      } else {
+        parsed.hostname = `www.${parsed.hostname}`;
+        origins.add(parsed.origin);
+      }
+    } catch {
+      // Ignore malformed optional URLs; explicit env validation is handled elsewhere.
+    }
+  });
+
+  return Array.from(origins);
+}
+
+const allowedOrigins = expandAllowedOrigins([env.clientUrl, env.adminUrl]);
 const devTunnelHosts = [".trycloudflare.com", ".ngrok-free.dev"];
 
 app.use(cors({
