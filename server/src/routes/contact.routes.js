@@ -17,6 +17,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function withTimeout(promise, timeoutMs, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
 
 router.post("/", async (req, res, next) => {
   try {
@@ -39,36 +47,45 @@ router.post("/", async (req, res, next) => {
       host: env.smtp.host,
       port: env.smtp.port,
       secure: env.smtp.secure,
+      family: 4,
+      requireTLS: env.smtp.port === 587,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       auth: {
         user: env.smtp.user,
         pass: env.smtp.pass
       }
     });
 
-    await transporter.sendMail({
-      from: env.smtp.from,
-      to: env.smtp.to,
-      replyTo: env.smtp.from,
-      subject: `New website enquiry from ${name}`,
-      text: [
-        "New contact enquiry from Phoenix Medicaments website:",
-        "",
-        `Name: ${name}`,
-        `Number: ${number}`,
-        "",
-        "Requirement:",
-        requirement
-      ].join("\n"),
-      html: `
-        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0d1814">
-          <h2 style="color:#113f33">New website enquiry</h2>
-          <p><strong>Name:</strong> ${safeName}</p>
-          <p><strong>Number:</strong> ${safeNumber}</p>
-          <p><strong>Requirement:</strong></p>
-          <p style="white-space:pre-line;background:#f2f8f3;padding:14px;border-radius:8px">${safeRequirement}</p>
-        </div>
-      `
-    });
+    await withTimeout(
+      transporter.sendMail({
+        from: env.smtp.from,
+        to: env.smtp.to,
+        replyTo: env.smtp.from,
+        subject: `New website enquiry from ${name}`,
+        text: [
+          "New contact enquiry from Phoenix Medicaments website:",
+          "",
+          `Name: ${name}`,
+          `Number: ${number}`,
+          "",
+          "Requirement:",
+          requirement
+        ].join("\n"),
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0d1814">
+            <h2 style="color:#113f33">New website enquiry</h2>
+            <p><strong>Name:</strong> ${safeName}</p>
+            <p><strong>Number:</strong> ${safeNumber}</p>
+            <p><strong>Requirement:</strong></p>
+            <p style="white-space:pre-line;background:#f2f8f3;padding:14px;border-radius:8px">${safeRequirement}</p>
+          </div>
+        `
+      }),
+      18000,
+      "Contact mail server timed out."
+    );
 
     return res.json({ message: "Enquiry sent successfully." });
   } catch (error) {
@@ -77,3 +94,4 @@ router.post("/", async (req, res, next) => {
 });
 
 export default router;
+

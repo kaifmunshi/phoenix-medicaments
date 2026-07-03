@@ -50,13 +50,26 @@ export async function fetchCertificates() {
 }
 
 export async function sendContactEnquiry(payload) {
-  const response = await fetch(`${API_URL}/contact`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 18000);
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || "Could not send enquiry");
-  return data;
+  try {
+    const response = await fetch(`${API_URL}/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || "Could not send enquiry");
+    return data;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("The mail server is taking too long. Please send your requirement on WhatsApp.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
