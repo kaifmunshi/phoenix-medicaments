@@ -5087,3 +5087,38 @@ button,
   object-position: center;
   width: 100%;
 }
+
+.product-skeleton-card {
+  pointer-events: none;
+}
+
+.product-skeleton-card .record-image-wrap,
+.product-skeleton-card .record-body span {
+  background: linear-gradient(90deg, rgba(17, 63, 51, 0.06), rgba(47, 139, 104, 0.14), rgba(17, 63, 51, 0.06));
+  background-size: 220% 100%;
+  animation: skeleton-sheen 1400ms ease-in-out infinite;
+}
+
+.product-skeleton-card .record-body span {
+  border-radius: 999px;
+  display: block;
+  height: 14px;
+}
+
+.product-skeleton-card .record-body span:first-child {
+  height: 22px;
+  width: 68%;
+}
+
+.product-skeleton-card .record-body span:nth-child(2) {
+  width: 88%;
+}
+
+.product-skeleton-card .record-body span:nth-child(3) {
+  width: 54%;
+}
+
+@keyframes skeleton-sheen {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}

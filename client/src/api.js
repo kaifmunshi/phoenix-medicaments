@@ -1,5 +1,13 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+export async function warmApi() {
+  try {
+    await fetch(`${API_URL}/health`, { cache: "no-store" });
+  } catch {
+    // The visible pages handle API errors when data is requested.
+  }
+}
+
 export async function fetchProducts({ type = "", page = 1, limit = 15 } = {}) {
   const params = new URLSearchParams({ page, limit });
   if (type) params.set("type", type);
