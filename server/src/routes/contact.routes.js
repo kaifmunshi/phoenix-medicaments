@@ -27,6 +27,69 @@ function withTimeout(promise, timeoutMs, message) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
+function buildMailContent({ name, number, requirement, safeName, safeNumber, safeRequirement }) {
+  return {
+    subject: `New website enquiry from ${name}`,
+    text: [
+      "New contact enquiry from Phoenix Medicaments website:",
+      "",
+      `Name: ${name}`,
+      `Number: ${number}`,
+      "",
+      "Requirement:",
+      requirement
+    ].join("\n"),
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0d1814">
+        <h2 style="color:#113f33">New website enquiry</h2>
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Number:</strong> ${safeNumber}</p>
+        <p><strong>Requirement:</strong></p>
+        <p style="white-space:pre-line;background:#f2f8f3;padding:14px;border-radius:8px">${safeRequirement}</p>
+      </div>
+    `
+  };
+}
+
+async function getSmtpHostAddress() {
+  if (env.smtp.hostAddress) return env.smtp.hostAddress;
+  const [address] = await dns.resolve4(env.smtp.host);
+  return address;
+}
+
+async function sendWithSmtp(mail) {
+  const smtpHostAddress = await getSmtpHostAddress();
+
+  const transporter = nodemailer.createTransport({
+    host: smtpHostAddress,
+    port: env.smtp.port,
+    secure: env.smtp.secure,
+    family: 4,
+    requireTLS: env.smtp.port === 587,
+    tls: { servername: env.smtp.host },
+    connectionTimeout: 20000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    auth: {
+      user: env.smtp.user,
+      pass: env.smtp.pass
+    }
+  });
+
+  await withTimeout(
+    transporter.sendMail({
+      from: env.smtp.from,
+      to: env.smtp.to,
+      replyTo: env.smtp.from,
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html
+    }),
+    30000,
+    "Contact mail server timed out."
+  );
+}
+
 router.post("/", async (req, res, next) => {
   try {
     const name = clean(req.body?.name);
@@ -44,52 +107,8 @@ router.post("/", async (req, res, next) => {
       return res.status(500).json({ message: "Contact email is not configured on the server." });
     }
 
-    const [smtpHostAddress] = await dns.resolve4(env.smtp.host);
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHostAddress,
-      port: env.smtp.port,
-      secure: env.smtp.secure,
-      family: 4,
-      requireTLS: env.smtp.port === 587,
-      tls: { servername: env.smtp.host },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      auth: {
-        user: env.smtp.user,
-        pass: env.smtp.pass
-      }
-    });
-
-    await withTimeout(
-      transporter.sendMail({
-        from: env.smtp.from,
-        to: env.smtp.to,
-        replyTo: env.smtp.from,
-        subject: `New website enquiry from ${name}`,
-        text: [
-          "New contact enquiry from Phoenix Medicaments website:",
-          "",
-          `Name: ${name}`,
-          `Number: ${number}`,
-          "",
-          "Requirement:",
-          requirement
-        ].join("\n"),
-        html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0d1814">
-            <h2 style="color:#113f33">New website enquiry</h2>
-            <p><strong>Name:</strong> ${safeName}</p>
-            <p><strong>Number:</strong> ${safeNumber}</p>
-            <p><strong>Requirement:</strong></p>
-            <p style="white-space:pre-line;background:#f2f8f3;padding:14px;border-radius:8px">${safeRequirement}</p>
-          </div>
-        `
-      }),
-      18000,
-      "Contact mail server timed out."
-    );
+    const mail = buildMailContent({ name, number, requirement, safeName, safeNumber, safeRequirement });
+    await sendWithSmtp(mail);
 
     return res.json({ message: "Enquiry sent successfully." });
   } catch (error) {
@@ -98,6 +117,3 @@ router.post("/", async (req, res, next) => {
 });
 
 export default router;
-
-
-

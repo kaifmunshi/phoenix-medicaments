@@ -20,6 +20,7 @@ export const env = {
   adminPassword: process.env.ADMIN_PASSWORD || "",
   smtp: {
     host: process.env.SMTP_HOST || "",
+    hostAddress: process.env.SMTP_HOST_ADDRESS || "",
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === "true",
     user: process.env.SMTP_USER || "",
@@ -28,4 +29,3 @@ export const env = {
     to: process.env.CONTACT_NOTIFICATION_EMAIL || "phoenixsalesahmedabad@gmail.com"
   }
 };
-
