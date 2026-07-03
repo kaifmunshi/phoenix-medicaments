@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+client-build-check-*/
+client-build-check-amazon/
+client-build-check-amazon-link/
+client-build-check-dropdown/
+client-build-check-dropdown-align/
+temporary-admin-tunnel-steps.txt

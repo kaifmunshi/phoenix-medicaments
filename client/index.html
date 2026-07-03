@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Phoenix Medicaments product catalogue, packaging, labelling, and business enquiry website." />
+    <title>Phoenix Medicaments</title>
+    <style>
+      :root {
+        --splash-forest: #092c24;
+        --splash-leaf: #2f8b68;
+        --splash-gold: #f1c36b;
+        --splash-cream: #fbf8ef;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .app-splash {
+        align-items: center;
+        background:
+          linear-gradient(120deg, rgba(5, 25, 20, 0.94), rgba(17, 63, 51, 0.9)),
+          radial-gradient(circle at 82% 18%, rgba(241, 195, 107, 0.28), transparent 24%),
+          radial-gradient(circle at 16% 86%, rgba(47, 139, 104, 0.3), transparent 28%);
+        color: white;
+        display: grid;
+        inset: 0;
+        justify-items: center;
+        min-height: 100svh;
+        overflow: hidden;
+        padding: 24px;
+        position: fixed;
+        transition: opacity 420ms ease, visibility 420ms ease;
+        z-index: 9999;
+      }
+
+      .app-splash::before,
+      .app-splash::after {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        content: "";
+        position: absolute;
+      }
+
+      .app-splash::before {
+        height: min(72vw, 680px);
+        right: -18vw;
+        top: -24vw;
+        width: min(72vw, 680px);
+      }
+
+      .app-splash::after {
+        bottom: -22vw;
+        height: min(58vw, 520px);
+        left: -16vw;
+        width: min(58vw, 520px);
+      }
+
+      .app-splash-card {
+        display: grid;
+        gap: 22px;
+        max-width: 620px;
+        position: relative;
+        text-align: center;
+        width: min(100%, 620px);
+        z-index: 1;
+      }
+
+      .app-splash-mark {
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        display: inline-grid;
+        height: 92px;
+        justify-self: center;
+        place-items: center;
+        position: relative;
+        width: 92px;
+      }
+
+      .app-splash-mark::before {
+        animation: splash-spin 1300ms linear infinite;
+        border: 3px solid rgba(241, 195, 107, 0.28);
+        border-top-color: var(--splash-gold);
+        border-radius: inherit;
+        content: "";
+        inset: -9px;
+        position: absolute;
+      }
+
+      .app-splash-leaf {
+        background: linear-gradient(145deg, var(--splash-gold), #fff1be);
+        border-radius: 80% 0 80% 0;
+        height: 34px;
+        transform: rotate(-18deg);
+        width: 34px;
+      }
+
+      .app-splash h1 {
+        color: white;
+        font: 900 clamp(2rem, 7vw, 4.8rem) / 0.96 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+        margin: 0;
+      }
+
+      .app-splash p {
+        color: rgba(255, 255, 255, 0.78);
+        font: 750 clamp(0.96rem, 2.4vw, 1.16rem) / 1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0 auto;
+        max-width: 520px;
+      }
+
+      .app-splash-rail {
+        background: rgba(255, 255, 255, 0.13);
+        border-radius: 999px;
+        height: 10px;
+        justify-self: center;
+        max-width: 360px;
+        overflow: hidden;
+        width: 70%;
+      }
+
+      .app-splash-rail i {
+        animation: splash-slide 1500ms ease-in-out infinite;
+        background: linear-gradient(90deg, var(--splash-leaf), var(--splash-gold), var(--splash-cream));
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        width: 48%;
+      }
+
+      .app-splash-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .app-splash-tags span {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.86);
+        font: 850 0.78rem / 1 Inter, ui-sans-serif, system-ui, sans-serif;
+        padding: 9px 12px;
+      }
+
+      body.app-ready .app-splash {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      @keyframes splash-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes splash-slide {
+        0% { transform: translateX(-110%); }
+        50% { transform: translateX(75%); }
+        100% { transform: translateX(240%); }
+      }
+
+      @media (max-width: 560px) {
+        .app-splash-card {
+          gap: 18px;
+        }
+
+        .app-splash-mark {
+          height: 76px;
+          width: 76px;
+        }
+
+        .app-splash-rail {
+          width: 86%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-splash" id="app-splash" role="status" aria-live="polite">
+      <section class="app-splash-card" aria-label="Phoenix Medicaments is loading">
+        <img class="app-splash-logo" src="https://res.cloudinary.com/dfqnjuaja/image/upload/v1783000730/mb-herbals-logo_xhfixq.svg" alt="MB Herbals" />
+        <h1>Phoenix Medicaments</h1>
+        <p>Preparing a fresh catalogue of herbal, wellness, and export-ready ingredients.</p>
+        <div class="app-splash-rail" aria-hidden="true"><i></i></div>
+        <div class="app-splash-tags" aria-hidden="true">
+          <span>Herbal powders</span>
+          <span>Private label</span>
+          <span>Global supply</span>
+        </div>
+      </section>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
