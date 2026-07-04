@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
 
 const router = express.Router();
+const SMTP_ATTEMPTS = 3;
 
 function clean(value) {
   return String(value || "").trim();
@@ -16,6 +17,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function withTimeout(promise, timeoutMs, message) {
@@ -57,9 +62,7 @@ async function getSmtpHostAddress() {
   return address;
 }
 
-async function sendWithSmtp(mail) {
-  const smtpHostAddress = await getSmtpHostAddress();
-
+async function sendWithSmtpOnce(mail, smtpHostAddress) {
   const transporter = nodemailer.createTransport({
     host: smtpHostAddress,
     port: env.smtp.port,
@@ -67,9 +70,9 @@ async function sendWithSmtp(mail) {
     family: 4,
     requireTLS: env.smtp.port === 587,
     tls: { servername: env.smtp.host },
-    connectionTimeout: 20000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
+    connectionTimeout: 12000,
+    greetingTimeout: 12000,
+    socketTimeout: 25000,
     auth: {
       user: env.smtp.user,
       pass: env.smtp.pass
@@ -85,9 +88,28 @@ async function sendWithSmtp(mail) {
       text: mail.text,
       html: mail.html
     }),
-    30000,
+    25000,
     "Contact mail server timed out."
   );
+}
+
+async function sendWithSmtp(mail) {
+  const smtpHostAddress = await getSmtpHostAddress();
+  let lastError;
+
+  for (let attempt = 1; attempt <= SMTP_ATTEMPTS; attempt += 1) {
+    try {
+      console.info(`SMTP send attempt ${attempt}/${SMTP_ATTEMPTS} via ${env.smtp.host}:${env.smtp.port} (${smtpHostAddress})`);
+      await sendWithSmtpOnce(mail, smtpHostAddress);
+      return;
+    } catch (error) {
+      lastError = error;
+      console.warn(`SMTP send attempt ${attempt}/${SMTP_ATTEMPTS} failed: ${error.code || error.message}`);
+      if (attempt < SMTP_ATTEMPTS) await wait(1500 * attempt);
+    }
+  }
+
+  throw lastError;
 }
 
 router.post("/", async (req, res, next) => {

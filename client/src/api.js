@@ -51,7 +51,7 @@ export async function fetchCertificates() {
 
 export async function sendContactEnquiry(payload) {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 18000);
+  const timeoutId = window.setTimeout(() => controller.abort(), 45000);
 
   try {
     const response = await fetch(`${API_URL}/contact`, {
