@@ -23,6 +23,7 @@ export const env = {
     fromEmail: process.env.MAIL_FROM || "",
     fromName: process.env.MAIL_FROM_NAME || "Phoenix Medicaments",
     replyTo: process.env.MAIL_REPLY_TO || process.env.MAIL_FROM || "",
-    to: process.env.CONTACT_NOTIFICATION_EMAIL || "phoenixsalesahmedabad@gmail.com"
+    to: process.env.CONTACT_NOTIFICATION_EMAIL || "phoenix.mbherbals.azim@gmail.com"
   }
 };
+
