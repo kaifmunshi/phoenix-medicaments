@@ -51,7 +51,7 @@ export async function fetchCertificates() {
 
 export async function sendContactEnquiry(payload) {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 45000);
+  const timeoutId = window.setTimeout(() => controller.abort(), 20000);
 
   try {
     const response = await fetch(`${API_URL}/contact`, {
@@ -66,10 +66,11 @@ export async function sendContactEnquiry(payload) {
     return data;
   } catch (error) {
     if (error.name === "AbortError") {
-      throw new Error("The mail server is taking too long. Please send your requirement on WhatsApp.");
+      throw new Error("The mail service is taking too long. Please send your requirement on WhatsApp.");
     }
     throw error;
   } finally {
     window.clearTimeout(timeoutId);
   }
 }
+

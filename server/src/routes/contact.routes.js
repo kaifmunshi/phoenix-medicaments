@@ -1,10 +1,7 @@
-import dns from "node:dns/promises";
 import express from "express";
-import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
 
 const router = express.Router();
-const SMTP_ATTEMPTS = 3;
 
 function clean(value) {
   return String(value || "").trim();
@@ -17,10 +14,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function withTimeout(promise, timeoutMs, message) {
@@ -56,60 +49,39 @@ function buildMailContent({ name, number, requirement, safeName, safeNumber, saf
   };
 }
 
-async function getSmtpHostAddress() {
-  if (env.smtp.hostAddress) return env.smtp.hostAddress;
-  const [address] = await dns.resolve4(env.smtp.host);
-  return address;
-}
-
-async function sendWithSmtpOnce(mail, smtpHostAddress) {
-  const transporter = nodemailer.createTransport({
-    host: smtpHostAddress,
-    port: env.smtp.port,
-    secure: env.smtp.secure,
-    family: 4,
-    requireTLS: env.smtp.port === 587,
-    tls: { servername: env.smtp.host },
-    connectionTimeout: 12000,
-    greetingTimeout: 12000,
-    socketTimeout: 25000,
-    auth: {
-      user: env.smtp.user,
-      pass: env.smtp.pass
-    }
-  });
-
-  await withTimeout(
-    transporter.sendMail({
-      from: env.smtp.from,
-      to: env.smtp.to,
-      replyTo: env.smtp.from,
-      subject: mail.subject,
-      text: mail.text,
-      html: mail.html
+async function sendWithBrevo(mail) {
+  const response = await withTimeout(
+    fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "api-key": env.mail.apiKey
+      },
+      body: JSON.stringify({
+        sender: {
+          name: env.mail.fromName,
+          email: env.mail.fromEmail
+        },
+        to: [{ email: env.mail.to }],
+        replyTo: {
+          name: env.mail.fromName,
+          email: env.mail.replyTo || env.mail.fromEmail
+        },
+        subject: mail.subject,
+        textContent: mail.text,
+        htmlContent: mail.html
+      })
     }),
-    25000,
-    "Contact mail server timed out."
+    18000,
+    "Contact mail provider timed out."
   );
-}
 
-async function sendWithSmtp(mail) {
-  const smtpHostAddress = await getSmtpHostAddress();
-  let lastError;
-
-  for (let attempt = 1; attempt <= SMTP_ATTEMPTS; attempt += 1) {
-    try {
-      console.info(`SMTP send attempt ${attempt}/${SMTP_ATTEMPTS} via ${env.smtp.host}:${env.smtp.port} (${smtpHostAddress})`);
-      await sendWithSmtpOnce(mail, smtpHostAddress);
-      return;
-    } catch (error) {
-      lastError = error;
-      console.warn(`SMTP send attempt ${attempt}/${SMTP_ATTEMPTS} failed: ${error.code || error.message}`);
-      if (attempt < SMTP_ATTEMPTS) await wait(1500 * attempt);
-    }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.error("Brevo contact mail failed", data);
+    throw new Error(data.message || "Contact mail provider rejected the request.");
   }
-
-  throw lastError;
 }
 
 router.post("/", async (req, res, next) => {
@@ -125,12 +97,12 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "Name, number, and requirement are required." });
     }
 
-    if (!env.smtp.host || !env.smtp.user || !env.smtp.pass || !env.smtp.to) {
+    if (!env.mail.apiKey || !env.mail.fromEmail || !env.mail.to) {
       return res.status(500).json({ message: "Contact email is not configured on the server." });
     }
 
     const mail = buildMailContent({ name, number, requirement, safeName, safeNumber, safeRequirement });
-    await sendWithSmtp(mail);
+    await sendWithBrevo(mail);
 
     return res.json({ message: "Enquiry sent successfully." });
   } catch (error) {

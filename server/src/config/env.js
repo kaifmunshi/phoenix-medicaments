@@ -18,14 +18,11 @@ export const env = {
   adminApiKey: process.env.ADMIN_API_KEY || "",
   adminUsername: process.env.ADMIN_USERNAME || "admin",
   adminPassword: process.env.ADMIN_PASSWORD || "",
-  smtp: {
-    host: process.env.SMTP_HOST || "",
-    hostAddress: process.env.SMTP_HOST_ADDRESS || "",
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === "true",
-    user: process.env.SMTP_USER || "",
-    pass: (process.env.SMTP_PASS || "").replace(/\s/g, ""),
-    from: process.env.MAIL_FROM || process.env.SMTP_USER || "",
+  mail: {
+    apiKey: process.env.BREVO_API_KEY || "",
+    fromEmail: process.env.MAIL_FROM || "",
+    fromName: process.env.MAIL_FROM_NAME || "Phoenix Medicaments",
+    replyTo: process.env.MAIL_REPLY_TO || process.env.MAIL_FROM || "",
     to: process.env.CONTACT_NOTIFICATION_EMAIL || "phoenixsalesahmedabad@gmail.com"
   }
 };
