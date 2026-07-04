@@ -392,7 +392,8 @@ function CategoriesPage() {
   const shouldScrollToProductsRef = useRef(false);
   const currentGroup = productGroups[selectedGroup];
   const pageSize = 12;
-  const totalProducts = catalogueTotal || Object.values(categoryCounts).reduce((sum, count) => sum + Number(count || 0), 0);
+  const knownCategoryTotal = Object.values(categoryCounts).reduce((sum, count) => sum + Number(count || 0), 0);
+  const totalProducts = Math.max(Number(catalogueTotal || 0), knownCategoryTotal, Number(apiTotal || 0));
 
 
   useEffect(() => {
@@ -766,6 +767,12 @@ function ContactPage() {
 
   function updateField(event) {
     const { name, value } = event.target;
+    if (name === "number") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((current) => ({ ...current, [name]: digitsOnly }));
+      return;
+    }
+
     setFormData((current) => ({ ...current, [name]: value }));
   }
 
@@ -805,7 +812,7 @@ function ContactPage() {
             </label>
             <label>
               <span>Number</span>
-              <input name="number" value={formData.number} onChange={updateField} placeholder="Phone or WhatsApp number" required />
+              <input name="number" value={formData.number} onChange={updateField} placeholder="Mobile or WhatsApp number" inputMode="numeric" pattern="[0-9]{10}" maxLength="10" autoComplete="tel-national" required />
             </label>
             <label className="form-wide">
               <span>Requirement</span>
