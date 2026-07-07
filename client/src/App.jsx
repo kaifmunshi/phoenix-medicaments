@@ -572,7 +572,7 @@ function CategoriesPage() {
 
       {productError && <p className="inline-alert">{productError}</p>}
       {isLoadingProducts && (
-        <LoadingBanner title={`Preparing ${currentGroup.label}`} text="The catalogue service is waking up. This can take a moment on the first visit." />
+        <LoadingBanner title={`Preparing ${currentGroup.label}`} text="The catalogue service is loading . Kindly please wait for 10 seconds." />
       )}
       {!isLoadingProducts && !productError && apiProducts.length === 0 && (
         <div className="empty-catalog-state">
