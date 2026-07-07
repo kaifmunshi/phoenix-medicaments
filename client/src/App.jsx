@@ -8,7 +8,7 @@ const home3Image = "https://res.cloudinary.com/dfqnjuaja/image/upload/v178308276
 const globalExportMap = "https://res.cloudinary.com/dfqnjuaja/image/upload/v1783000810/global-export-map-v2_fdpakh.png";
 const certificatePlaceholder = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img" aria-labelledby="title desc"><title id="title">Certificate placeholder</title><desc id="desc">Elegant certificate placeholder for Phoenix Medicaments approvals.</desc><rect width="900" height="1200" fill="#fbf8ef"/><rect x="70" y="70" width="760" height="1060" fill="#ffffff" stroke="#c79335" stroke-width="8"/><rect x="105" y="105" width="690" height="990" fill="none" stroke="#113f33" stroke-width="2" opacity="0.35"/><circle cx="450" cy="255" r="74" fill="#113f33"/><path d="M420 255c24-62 72-77 116-85-8 60-43 95-102 111" fill="#2f8b68"/><text x="450" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="#113f33">Certificate</text><text x="450" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#5f7068">Phoenix Medicaments Pvt Ltd</text><line x1="210" y1="560" x2="690" y2="560" stroke="#dce7df" stroke-width="6"/><line x1="210" y1="640" x2="690" y2="640" stroke="#dce7df" stroke-width="6"/><line x1="210" y1="720" x2="690" y2="720" stroke="#dce7df" stroke-width="6"/><rect x="315" y="860" width="270" height="90" rx="45" fill="#113f33"/><text x="450" y="918" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="800" fill="#ffffff">Verified Document</text></svg>')}`;
 const mbHerbalsLogo = "https://res.cloudinary.com/dfqnjuaja/image/upload/v1783000730/mb-herbals-logo_xhfixq.svg";
-import { fetchCertificates, fetchProducts, sendContactEnquiry, warmApi } from "./api";
+import { fetchCertificates, fetchProducts, prewarmApiData, sendContactEnquiry } from "./api";
 
 const businessNumber = "8511052468";
 const contactEmail = "phoenixsalesahmedabad@gmail.com";
@@ -873,7 +873,7 @@ export function App() {
   const [activeRoute, setActiveRoute] = useState(getRouteFromPath);
 
   useEffect(() => {
-    warmApi();
+    prewarmApiData();
   }, []);
 
   useEffect(() => {

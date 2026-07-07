@@ -1,11 +1,33 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-export async function warmApi() {
-  try {
-    await fetch(`${API_URL}/health`, { cache: "no-store" });
-  } catch {
-    // The visible pages handle API errors when data is requested.
+let warmApiPromise;
+let prewarmDataPromise;
+
+export function warmApi() {
+  if (!warmApiPromise) {
+    warmApiPromise = fetch(`${API_URL}/health`, { cache: "no-store" })
+      .catch(() => {
+        // The visible pages handle API errors when data is requested.
+      });
   }
+
+  return warmApiPromise;
+}
+
+export function prewarmApiData() {
+  if (!prewarmDataPromise) {
+    prewarmDataPromise = warmApi()
+      .then(() => Promise.allSettled([
+        fetchProducts({ page: 1, limit: 1 }),
+        fetchProducts({ type: "Skin Care", page: 1, limit: 12 }),
+        fetchCertificates()
+      ]))
+      .catch(() => {
+        // Prefetch is only a speed-up. Pages still fetch their own data.
+      });
+  }
+
+  return prewarmDataPromise;
 }
 
 export async function fetchProducts({ type = "", page = 1, limit = 15 } = {}) {
